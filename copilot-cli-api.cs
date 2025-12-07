@@ -3,9 +3,16 @@
 
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure JSON serialization to use source generation
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, SourceGenerationContext.Default);
+});
 
 var app = builder.Build();
 
@@ -91,3 +98,7 @@ static async Task<string> ExecuteCopilotCommand(string htmlContent)
 
 record ConvertRequest(string Html);
 record ConvertResponse(string Markdown, bool Success);
+
+[JsonSerializable(typeof(ConvertResponse))]
+[JsonSerializable(typeof(ConvertRequest))]
+internal partial class SourceGenerationContext : JsonSerializerContext { }

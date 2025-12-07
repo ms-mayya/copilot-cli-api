@@ -1,0 +1,13 @@
+// generate http file for copilot-cli-api.cs
+
+@baseUrl = "http://localhost:5000"
+
+### Convert HTML to Markdown
+POST {{baseUrl}}/api/convert
+
+Content-Type: application/json
+
+{
+  "Html": "<p>Your HTML content here</p>"
+}
+
