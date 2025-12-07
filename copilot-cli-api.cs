@@ -11,14 +11,14 @@ var app = builder.Build();
 
 app.MapPost("/api/convert", async ([FromBody] ConvertRequest request) =>
 {
-    if (string.IsNullOrWhiteSpace(request.HtmlContent))
+    if (string.IsNullOrWhiteSpace(request.Html))
     {
-        return Results.BadRequest(new { error = "HtmlContent is required" });
+        return Results.BadRequest(new { error = "Html is required" });
     }
 
     try
     {
-        var result = await ExecuteCopilotCommand(request.HtmlContent, request.Model ?? "claude-haiku-4.5");
+        var result = await ExecuteCopilotCommand(request.Html);
         return Results.Ok(new ConvertResponse(result, true));
     }
     catch (Exception ex)
@@ -31,7 +31,7 @@ app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp =
 
 app.Run();
 
-static async Task<string> ExecuteCopilotCommand(string htmlContent, string model)
+static async Task<string> ExecuteCopilotCommand(string htmlContent)
 {
     var tempFile = Path.GetTempFileName();
 
@@ -42,7 +42,7 @@ static async Task<string> ExecuteCopilotCommand(string htmlContent, string model
         var startInfo = new ProcessStartInfo
         {
             FileName = "copilot",
-            Arguments = $"--model {model} --prompt \"$(< {tempFile})\"",
+            Arguments = $"--prompt \"$(< {tempFile})\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -89,5 +89,5 @@ static async Task<string> ExecuteCopilotCommand(string htmlContent, string model
     }
 }
 
-record ConvertRequest(string HtmlContent, string? Model);
+record ConvertRequest(string Html);
 record ConvertResponse(string Markdown, bool Success);
