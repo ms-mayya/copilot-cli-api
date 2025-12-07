@@ -1,13 +1,21 @@
-// generate http file for copilot-cli-api.cs
+@baseUrl = http://localhost:5000
 
-@baseUrl = "http://localhost:5000"
+### Health Check
+GET {{baseUrl}}/api/health
 
-### Convert HTML to Markdown
+### Convert HTML to Markdown - Simple Example
 POST {{baseUrl}}/api/convert
-
 Content-Type: application/json
 
 {
-  "Html": "<p>Your HTML content here</p>"
+  "Html": "<html><head><title>Term Life Insurance</title></head><body><h1>Term Life Insurance Policy</h1><p>Coverage Amount: $500,000</p><p>Monthly Premium: $45.99</p><ul><li>20-year term</li><li>Renewable option</li><li>Accidental death benefit included</li></ul></body></html>"
+}
+
+### Convert HTML to Markdown - Complex Insurance Example
+POST {{baseUrl}}/api/convert
+Content-Type: application/json
+
+{
+  "Html": "<html><head><title>Comprehensive Health Insurance Plan</title><meta name=\"description\" content=\"Complete health coverage for individuals and families\"><meta name=\"date\" content=\"2025-12-07\"></head><body><div class=\"nav\">Skip navigation</div><h1>Comprehensive Health Insurance</h1><section><h2>Coverage Details</h2><p>Our comprehensive health insurance plan provides coverage for hospitalization, outpatient services, prescription drugs, and preventive care.</p><table><thead><tr><th>Benefit</th><th>Coverage Limit</th><th>Copay</th></tr></thead><tbody><tr><td>Hospitalization</td><td>$1,000,000 per year</td><td>$250 per admission</td></tr><tr><td>Outpatient Services</td><td>$50,000 per year</td><td>$30 per visit</td></tr><tr><td>Prescription Drugs</td><td>$10,000 per year</td><td>$15 generic / $35 brand</td></tr></tbody></table></section><section><h2>Exclusions</h2><ul><li>Pre-existing conditions during first 12 months</li><li>Cosmetic procedures not medically necessary</li><li>Experimental treatments not approved by FDA</li></ul></section><div class=\"ads\">Advertisement content here</div><footer><p>Contact us at 1-800-INSURE or visit insurancecompany.com</p><p class=\"disclaimer\">This is a summary of benefits. Please refer to the full policy document for complete terms and conditions. All coverage subject to policy terms, conditions, and exclusions.</p></footer></body></html>"
 }
 
