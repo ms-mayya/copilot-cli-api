@@ -46,15 +46,16 @@ static async Task<string> ExecuteCopilotCommand(string htmlContent)
     {
         await File.WriteAllTextAsync(tempFile, htmlContent);
 
+        var workdir = Directory.GetCurrentDirectory();
         var startInfo = new ProcessStartInfo
         {
             FileName = "copilot",
-            Arguments = $"--prompt \"$(< {tempFile})\"",
+            Arguments = $"--add-dir {workdir} --prompt \"$(< {tempFile})\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            WorkingDirectory = Directory.GetCurrentDirectory()
+            WorkingDirectory = workdir
         };
 
         using var process = new Process { StartInfo = startInfo };
@@ -101,4 +102,6 @@ record ConvertResponse(string Markdown, bool Success);
 
 [JsonSerializable(typeof(ConvertResponse))]
 [JsonSerializable(typeof(ConvertRequest))]
+[JsonSerializable(typeof(DateTime))]
+[JsonSerializable(typeof(string))]
 internal partial class SourceGenerationContext : JsonSerializerContext { }
