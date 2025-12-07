@@ -44,13 +44,13 @@ static async Task<string> ExecuteCopilotCommand(string htmlContent)
 
     try
     {
-        await File.WriteAllTextAsync(tempFile, htmlContent);
-
         var workdir = Directory.GetCurrentDirectory();
+        await File.WriteAllTextAsync(Path.Combine(workdir, tempFile), htmlContent);
+
         var startInfo = new ProcessStartInfo
         {
             FileName = "copilot",
-            Arguments = $"--add-dir {workdir} --prompt \"$(< {tempFile})\"",
+            Arguments = $"--add-dir {workdir} --prompt \"$(< ./{tempFile})\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
