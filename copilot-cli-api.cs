@@ -18,83 +18,59 @@ var app = builder.Build();
 
 app.MapPost("/api/convert", async ([FromBody] ConvertRequest request) =>
 {
-    if (string.IsNullOrWhiteSpace(request.Html))
-    {
-        return Results.BadRequest(new { error = "Html is required" });
-    }
-
-    try
-    {
-        var result = await ExecuteCopilotCommand(request.Html);
-        return Results.Ok(new ConvertResponse(result, true));
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem(detail: ex.Message, statusCode: 500);
-    }
+    var result = await ExecuteCopilotCommandAsync(request.Html);
+    return TypedResults.Ok(new ConvertResponse(result, true));
 });
 
-app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+app.MapGet("/api/health", () => TypedResults.Ok());
 
 app.Run();
 
-static async Task<string> ExecuteCopilotCommand(string htmlContent)
+static async Task<string> ExecuteCopilotCommandAsync(string html)
 {
-    var tempFile = Path.GetTempFileName();
+    var workdir = Directory.GetCurrentDirectory();
 
-    try
+    var startInfo = new ProcessStartInfo
     {
-        var workdir = Directory.GetCurrentDirectory();
-        await File.WriteAllTextAsync(Path.Combine(workdir, tempFile), htmlContent);
+        FileName = "copilot",
+        UseShellExecute = false,
+        RedirectStandardOutput = true,
+        RedirectStandardError = true,
+        RedirectStandardInput = true,
+        CreateNoWindow = true,
+        WorkingDirectory = workdir
+    };
 
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = "copilot",
-            Arguments = $"--add-dir {workdir} --prompt \"$(< ./{tempFile})\"",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            WorkingDirectory = workdir
-        };
+    startInfo.ArgumentList.Add("--add-dir");
+    startInfo.ArgumentList.Add(workdir);
+    startInfo.ArgumentList.Add("--prompt");
+    startInfo.ArgumentList.Add(html);
 
-        using var process = new Process { StartInfo = startInfo };
+    using var proc = new Process { StartInfo = startInfo };
+    proc.Start();
 
-        var output = new StringBuilder();
-        var error = new StringBuilder();
-
-        process.OutputDataReceived += (sender, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-                output.AppendLine(e.Data);
-        };
-
-        process.ErrorDataReceived += (sender, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-                error.AppendLine(e.Data);
-        };
-
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        await process.WaitForExitAsync();
-
-        if (process.ExitCode != 0)
-        {
-            throw new Exception($"Copilot command failed: {error}");
-        }
-
-        return output.ToString();
-    }
-    finally
+    using var ms = new MemoryStream();
+    using (var sOut = proc.StandardOutput.BaseStream)
     {
-        if (File.Exists(tempFile))
+        byte[] buffer = new byte[4096];
+        int read;
+
+        while ((read = sOut.Read(buffer, 0, buffer.Length)) > 0)
         {
-            File.Delete(tempFile);
+            ms.Write(buffer, 0, read);
         }
     }
+
+    var error = proc.StandardError.ReadToEnd();
+
+    await proc.WaitForExitAsync();
+
+    if (ms.Length == 0)
+    {
+        throw new Exception($"Copilot command failed: {error}");
+    }
+
+    return Encoding.UTF8.GetString(ms.ToArray());
 }
 
 record ConvertRequest(string Html);
@@ -102,6 +78,4 @@ record ConvertResponse(string Markdown, bool Success);
 
 [JsonSerializable(typeof(ConvertResponse))]
 [JsonSerializable(typeof(ConvertRequest))]
-[JsonSerializable(typeof(DateTime))]
-[JsonSerializable(typeof(string))]
 internal partial class SourceGenerationContext : JsonSerializerContext { }
