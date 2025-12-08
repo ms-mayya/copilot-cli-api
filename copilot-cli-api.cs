@@ -19,7 +19,7 @@ var app = builder.Build();
 app.MapPost("/api/convert", async ([FromBody] ConvertRequest request) =>
 {
     var result = await ExecuteCopilotCommandAsync(request.Html);
-    return TypedResults.Ok(new ConvertResponse(result, true));
+    return TypedResults.Ok(new ConvertResponse(request.Html, result));
 });
 
 app.MapGet("/api/health", () => TypedResults.Ok());
@@ -74,7 +74,7 @@ static async Task<string> ExecuteCopilotCommandAsync(string html)
 }
 
 record ConvertRequest(string Html);
-record ConvertResponse(string Markdown, bool Success);
+record ConvertResponse(string Html, string Data);
 
 [JsonSerializable(typeof(ConvertResponse))]
 [JsonSerializable(typeof(ConvertRequest))]
