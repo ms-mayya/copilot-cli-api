@@ -1,5 +1,6 @@
 #!/usr/bin/env dotnet
 #:sdk Microsoft.NET.Sdk.Web
+#:package Yarp.ReverseProxy@2.3.0
 
 using System.Diagnostics;
 using System.Text;
@@ -14,6 +15,9 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, SourceGenerationContext.Default);
 });
 
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
 var app = builder.Build();
 
 app.MapPost("/api/convert", async ([FromBody] ConvertRequest request) =>
@@ -23,6 +27,8 @@ app.MapPost("/api/convert", async ([FromBody] ConvertRequest request) =>
 });
 
 app.MapGet("/api/health", () => TypedResults.Ok());
+
+app.MapReverseProxy();
 
 app.Run();
 
