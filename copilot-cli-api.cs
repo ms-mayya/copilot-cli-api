@@ -1,6 +1,5 @@
 #!/usr/bin/env dotnet
 #:sdk Microsoft.NET.Sdk.Web
-#:package Yarp.ReverseProxy@2.3.0
 
 using System.Diagnostics;
 using System.Text;
@@ -15,24 +14,19 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, SourceGenerationContext.Default);
 });
 
-builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-
 var app = builder.Build();
 
 app.MapPost("/api/convert", async ([FromBody] ConvertRequest request) =>
 {
-    var result = await ExecuteCopilotCommandAsync(request.Html);
+    var result = await ExecuteCopilotCommandAsync(request);
     return TypedResults.Ok(new ConvertResponse(request.Html, result));
 });
 
-app.MapGet("/api/health", () => TypedResults.Ok());
-
-app.MapReverseProxy();
+app.MapGet("/api/health", () => TypedResults.Ok(new HealthResponse()));
 
 app.Run();
 
-static async Task<string> ExecuteCopilotCommandAsync(string html)
+static async Task<string> ExecuteCopilotCommandAsync(ConvertRequest request)
 {
     var workdir = Directory.GetCurrentDirectory();
 
@@ -50,7 +44,12 @@ static async Task<string> ExecuteCopilotCommandAsync(string html)
     startInfo.ArgumentList.Add("--add-dir");
     startInfo.ArgumentList.Add(workdir);
     startInfo.ArgumentList.Add("--prompt");
-    startInfo.ArgumentList.Add(html);
+    startInfo.ArgumentList.Add(request.Html);
+    if (request.Model is not null)
+    {
+        startInfo.ArgumentList.Add("--model");
+        startInfo.ArgumentList.Add(request.Model);
+    }
 
     using var proc = new Process { StartInfo = startInfo };
     proc.Start();
@@ -79,9 +78,11 @@ static async Task<string> ExecuteCopilotCommandAsync(string html)
     return Encoding.UTF8.GetString(ms.ToArray());
 }
 
-record ConvertRequest(string Html);
+record ConvertRequest(string Html, string? Model = null);
 record ConvertResponse(string Html, string Data);
+record HealthResponse(string Status = "healthy");
 
 [JsonSerializable(typeof(ConvertResponse))]
 [JsonSerializable(typeof(ConvertRequest))]
+[JsonSerializable(typeof(HealthResponse))]
 internal partial class SourceGenerationContext : JsonSerializerContext { }
