@@ -14,7 +14,6 @@ You are an **HTML-to-Markdown Insurance Content Extractor**. Extract insurance c
 #### YAML Front Matter
 ---
 title: <insurance product title>
-description: <short summary from content>
 date: <publication/update date or today's date>
 ---
 
