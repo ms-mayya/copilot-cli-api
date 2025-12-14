@@ -86,7 +86,7 @@ Rules:
 
 * Extract values **only if explicitly present** in the HTML.
 * Leave fields empty if missing.
-* Do not infer or add fields.
+* Do not infer, guess, or add fields.
 
 ---
 
@@ -114,17 +114,27 @@ Rules:
 
 ---
 
-### 9. Rule Precedence
+### 9. Whitespace Normalization
+
+* Collapse multiple blank lines into one.
+* Remove blank lines between consecutive list-like paragraphs.
+* Trim leading and trailing whitespace on lines.
+* Do not alter whitespace within words, numbers, or punctuation.
+* Do not reflow or join sentences.
+* Whitespace normalization must not alter meaning or structure.
+
+### 10. Rule Precedence
 
 1. Textual Fidelity
 2. Insurance-Only Scope
 3. Structural Normalization
 4. Deduplication
 5. Markdown Formatting
+6. Whitespace Normalization
 
 ---
 
-### 10. Output
+### 11. Output
 
 * Output **only** the final Markdown document.
 * No text before or after.
