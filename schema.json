@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Insurance Product Description",
+  "type": "object",
+  "properties": {
+    "product_name": { "type": "string", "description": "Name of the insurance product" },
+    "features": {
+      "type": "array",
+      "description": "List of product features",
+      "items": { "type": "string" }
+    },
+    "coverage": {
+      "type": "array",
+      "description": "List of coverage items",
+      "items": { "type": "string" }
+    },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "payment_period": { "type": "string" },
+        "payment_methods": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "insurance_period": { "type": "string" }
+      },
+      "required": ["payment_period", "payment_methods", "insurance_period"]
+    }
+  },
+  "required": ["product_name", "features", "coverage", "rules"]
+}
